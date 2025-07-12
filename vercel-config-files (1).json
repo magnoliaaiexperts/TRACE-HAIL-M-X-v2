@@ -1,0 +1,232 @@
+// package.json
+{
+  "name": "nadn-trace-weather-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "vite": "^4.4.5"
+  }
+}
+
+// vercel.json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/weather.py": {
+      "runtime": "python3.9",
+      "maxDuration": 10
+    },
+    "api/alerts.py": {
+      "runtime": "python3.9",
+      "maxDuration": 10
+    },
+    "api/users.py": {
+      "runtime": "python3.9",
+      "maxDuration": 10
+    },
+    "api/sms.py": {
+      "runtime": "python3.9",
+      "maxDuration": 10
+    },
+    "api/health.py": {
+      "runtime": "python3.9",
+      "maxDuration": 5
+    }
+  },
+  "env": {
+    "MONGODB_URI": "@mongodb-uri",
+    "TWILIO_ACCOUNT_SID": "@twilio-account-sid",
+    "TWILIO_AUTH_TOKEN": "@twilio-auth-token",
+    "TWILIO_PHONE_NUMBER": "@twilio-phone-number",
+    "NWS_API_USER_AGENT": "@nws-api-user-agent"
+  },
+  "regions": ["iad1"],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=300, stale-while-revalidate"
+        }
+      ]
+    }
+  ]
+}
+
+// vite.config.js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['lucide-react']
+        }
+      }
+    }
+  }
+})
+
+// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        gray: {
+          900: '#0f0f23',
+          800: '#1a1a2e',
+          700: '#16213e',
+          600: '#0f3460',
+        }
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      maxWidth: {
+        '8xl': '88rem',
+      }
+    },
+  },
+  plugins: [],
+}
+
+// postcss.config.js
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+// requirements.txt
+requests==2.31.0
+pymongo==4.5.0
+twilio==8.10.0
+python-dotenv==1.0.0
+dnspython==2.4.2
+
+// .env.example
+# MongoDB Atlas Connection
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nadn_weather?retryWrites=true&w=majority
+
+# Twilio Configuration
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_PHONE_NUMBER=+1234567890
+
+# NWS API Configuration
+NWS_API_USER_AGENT=(NADN Weather Alert System, your-domain.com)
+
+# Optional: Additional API Keys
+OPENWEATHERMAP_API_KEY=your_api_key_here
+GEOCODING_API_KEY=your_api_key_here
+
+// .gitignore
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+dist/
+dist-ssr/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Vercel
+.vercel
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
